@@ -8,13 +8,47 @@ Open-source **multi-LLM playground** for developers and AI enthusiasts. Design p
 
 **Live demo:** [https://ale94lko.github.io/llm-playground-os/](https://ale94lko.github.io/llm-playground-os/)
 
+## Screenshots
+
+### Playground — compare models in parallel
+
+![Playground with prompt variables and model selection](docs/screenshots/playground.png)
+
+Write system and user prompts with `{{variables}}`, pick up to 4 providers, and run them side-by-side.
+
+### Metrics — charts and detailed comparison
+
+![Metrics dashboard with latency, TTFT, cost charts and comparison table](docs/screenshots/metrics.png)
+
+Track latency, TTFT, tokens, and cost. Toggle between **Latest run** and **Historical avg**, with a latency timeline across executions.
+
+### History — past runs and saved prompts
+
+![History page with past prompt executions](docs/screenshots/history.png)
+
+Browse previous comparisons and reload any run back into the playground.
+
+### Settings — encrypted vault and API keys
+
+![Settings page with encrypted vault and provider API keys](docs/screenshots/settings.png)
+
+Store API keys locally with AES-256-GCM encryption and an optional master password vault.
+
+### Mobile — hamburger navigation
+
+<p align="center">
+  <img src="docs/screenshots/mobile-menu.png" alt="Mobile navigation menu" width="360">
+</p>
+
+Responsive layout with a slide-out menu on small screens.
+
 ## Features
 
 - **Multi-provider support** — OpenAI, Anthropic, Google Gemini, Groq, and local Ollama
 - **Parallel execution** — Compare up to 4 models side-by-side in a responsive grid
 - **Variable engine** — Use `{{variable_name}}` syntax with auto-generated input fields
 - **Real-time metrics** — Latency, TTFT, token counts, and estimated cost per model
-- **Metrics dashboard** — Bar charts, latency timeline, and detailed comparison table (latest run or historical averages)
+- **Metrics dashboard** — Bar charts, latency timeline, and detailed comparison table
 - **Local-first API keys** — Encrypted with AES-256-GCM + master password before localStorage
 - **Code exporter** — Generate snippets for JavaScript, Python, cURL, and PHP
 - **History & library** — Save prompts with versioning and browse past executions
@@ -122,16 +156,28 @@ app/
 ├── pages/               # Playground, history, metrics, settings
 ├── stores/              # Provider & prompt state (persisted)
 └── server/api/          # Stream proxy (local dev / Node deployments)
+docs/
+└── screenshots/         # README screenshots (regenerate with npm run screenshots)
+scripts/
+└── capture-screenshots.mjs
 ```
 
 ## Development
 
 ```bash
-npm run dev        # Start dev server (uses /api/stream proxy)
-npm run build      # Production build (Node server)
-npm run generate   # Static export for GitHub Pages
-npm test           # Run unit tests
-npm run test:watch # Watch mode
+npm run dev          # Start dev server (uses /api/stream proxy)
+npm run build        # Production build (Node server)
+npm run generate     # Static export for GitHub Pages
+npm test             # Run unit tests
+npm run test:watch   # Watch mode
+npm run screenshots  # Regenerate README screenshots (requires dev server)
+```
+
+To refresh screenshots:
+
+```bash
+npm run dev          # in one terminal
+npm run screenshots  # in another
 ```
 
 ## Security
