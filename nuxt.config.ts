@@ -22,6 +22,9 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: 'Open-source multi-LLM playground for developers' },
       ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      ],
     },
   },
 
