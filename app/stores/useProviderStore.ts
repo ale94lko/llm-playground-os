@@ -1,0 +1,103 @@
+import { defineStore } from 'pinia'
+import type { ProviderId, ProviderModel, SelectedModel } from '~/types/llm'
+
+export const PROVIDER_MODELS: ProviderModel[] = [
+  { id: 'gpt-4o-mini', label: 'GPT-4o Mini', provider: 'openai', inputCostPer1M: 0.15, outputCostPer1M: 0.6 },
+  { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai', inputCostPer1M: 2.5, outputCostPer1M: 10 },
+  { id: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku', provider: 'anthropic', inputCostPer1M: 0.8, outputCostPer1M: 4 },
+  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', provider: 'anthropic', inputCostPer1M: 3, outputCostPer1M: 15 },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', provider: 'gemini', inputCostPer1M: 0.1, outputCostPer1M: 0.4 },
+  { id: 'gemini-2.5-pro-preview-05-06', label: 'Gemini 2.5 Pro', provider: 'gemini', inputCostPer1M: 1.25, outputCostPer1M: 10 },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', provider: 'groq', inputCostPer1M: 0.59, outputCostPer1M: 0.79 },
+  { id: 'llama3.2', label: 'Llama 3.2 (Ollama)', provider: 'ollama', inputCostPer1M: 0, outputCostPer1M: 0 },
+  { id: 'mistral', label: 'Mistral (Ollama)', provider: 'ollama', inputCostPer1M: 0, outputCostPer1M: 0 },
+]
+
+const DEFAULT_SLOTS: SelectedModel[] = [
+  { slotId: 'slot-1', provider: 'openai', modelId: 'gpt-4o-mini' },
+  { slotId: 'slot-2', provider: 'ollama', modelId: 'llama3.2' },
+]
+
+export const useProviderStore = defineStore('provider', {
+  state: () => ({
+    openaiKey: '',
+    anthropicKey: '',
+    geminiKey: '',
+    groqKey: '',
+    ollamaUrl: 'http://localhost:11434',
+    selectedModels: DEFAULT_SLOTS as SelectedModel[],
+  }),
+
+  getters: {
+    modelsByProvider: () => {
+      return PROVIDER_MODELS.reduce<Record<ProviderId, ProviderModel[]>>((acc, model) => {
+        if (!acc[model.provider]) acc[model.provider] = []
+        acc[model.provider].push(model)
+        return acc
+      }, {} as Record<ProviderId, ProviderModel[]>)
+    },
+
+    getModel(): (modelId: string) => ProviderModel | undefined {
+      return (modelId: string) => PROVIDER_MODELS.find(m => m.id === modelId)
+    },
+
+    isProviderConfigured(): (provider: ProviderId) => boolean {
+      return (provider: ProviderId) => {
+        switch (provider) {
+          case 'openai': return !!this.openaiKey
+          case 'anthropic': return !!this.anthropicKey
+          case 'gemini': return !!this.geminiKey
+          case 'groq': return !!this.groqKey
+          case 'ollama': return !!this.ollamaUrl
+          default: return false
+        }
+      }
+    },
+  },
+
+  actions: {
+    setApiKey(provider: ProviderId, value: string) {
+      const keyMap: Record<ProviderId, keyof typeof this.$state> = {
+        openai: 'openaiKey',
+        anthropic: 'anthropicKey',
+        gemini: 'geminiKey',
+        groq: 'groqKey',
+        ollama: 'ollamaUrl',
+      }
+      const field = keyMap[provider]
+      if (field) (this as Record<string, string>)[field] = value
+    },
+
+    getApiKey(provider: ProviderId): string {
+      switch (provider) {
+        case 'openai': return this.openaiKey
+        case 'anthropic': return this.anthropicKey
+        case 'gemini': return this.geminiKey
+        case 'groq': return this.groqKey
+        case 'ollama': return this.ollamaUrl
+        default: return ''
+      }
+    },
+
+    updateSlot(slotId: string, provider: ProviderId, modelId: string) {
+      const slot = this.selectedModels.find(s => s.slotId === slotId)
+      if (slot) {
+        slot.provider = provider
+        slot.modelId = modelId
+      }
+    },
+
+    addSlot() {
+      if (this.selectedModels.length >= 4) return
+      const id = `slot-${Date.now()}`
+      this.selectedModels.push({ slotId: id, provider: 'openai', modelId: 'gpt-4o-mini' })
+    },
+
+    removeSlot(slotId: string) {
+      if (this.selectedModels.length <= 1) return
+      this.selectedModels = this.selectedModels.filter(s => s.slotId !== slotId)
+    },
+  },
+
+  persist: true,
+})
