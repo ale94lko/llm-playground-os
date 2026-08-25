@@ -34,14 +34,6 @@ Browse previous comparisons and reload any run back into the playground.
 
 Store API keys locally with AES-256-GCM encryption and an optional master password vault.
 
-### Mobile — hamburger navigation
-
-<p align="center">
-  <img src="docs/screenshots/mobile-menu.png" alt="Mobile navigation menu" width="360">
-</p>
-
-Responsive layout with a slide-out menu on small screens.
-
 ## Features
 
 - **Multi-provider support** — OpenAI, Anthropic, Google Gemini, Groq, and local Ollama
