@@ -6,6 +6,7 @@ import {
   aggregateFromHistory,
   aggregateFromResponses,
   buildLatencyTimeline,
+  buildTimelineFromResponses,
   toChartData,
   type ModelMetricAggregate,
 } from '~/lib/metrics'
@@ -27,15 +28,31 @@ const activeAggregates = computed<ModelMetricAggregate[]>(() =>
   view.value === 'latest' ? latestAggregates.value : historicalAggregates.value,
 )
 
-const timelinePoints = computed(() => buildLatencyTimeline(promptStore.history))
+const timelinePoints = computed(() => {
+  if (view.value === 'latest') {
+    const latest = promptStore.history[0]
+    if (latest) return buildLatencyTimeline([latest])
+    return buildTimelineFromResponses(
+      promptStore.responses,
+      new Date().toISOString(),
+    )
+  }
+  return buildLatencyTimeline(promptStore.history)
+})
+
+const comparisonSubtitle = computed(() =>
+  view.value === 'latest'
+    ? 'Results from the most recent run'
+    : 'Historical averages across all runs',
+)
 
 const summaryCards = computed(() => {
-  const data = historicalAggregates.value
+  const data = activeAggregates.value
   if (!data.length) return []
 
-  const fastest = data[0]
+  const fastest = [...data].sort((a, b) => a.avgLatencyMs - b.avgLatencyMs)[0]
   const cheapest = [...data].sort((a, b) => a.avgCostUsd - b.avgCostUsd)[0]
-  const totalRuns = promptStore.history.length
+  const totalRuns = view.value === 'latest' ? 1 : promptStore.history.length
   const totalCost = data.reduce((s, d) => s + d.totalCostUsd, 0)
 
   return [
@@ -133,6 +150,7 @@ const costChart = computed(() =>
     <UiCard v-if="activeAggregates.length" class="overflow-hidden">
       <div class="p-4 border-b border-border">
         <h3 class="text-sm font-medium">Detailed comparison</h3>
+        <p class="text-xs text-muted-foreground mt-0.5">{{ comparisonSubtitle }}</p>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">

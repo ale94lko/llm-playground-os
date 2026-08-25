@@ -8,7 +8,8 @@ export const PROVIDER_MODELS: ProviderModel[] = [
   { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash', provider: 'gemini', inputCostPer1M: 0.15, outputCostPer1M: 0.6 },
   { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'gemini', inputCostPer1M: 1.25, outputCostPer1M: 10 },
   { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite', provider: 'gemini', inputCostPer1M: 0.075, outputCostPer1M: 0.3 },
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', provider: 'groq', inputCostPer1M: 0.59, outputCostPer1M: 0.79 },
+  { id: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B', provider: 'groq', inputCostPer1M: 0.15, outputCostPer1M: 0.6 },
+  { id: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B', provider: 'groq', inputCostPer1M: 0.075, outputCostPer1M: 0.3 },
   { id: 'llama3.2', label: 'Llama 3.2 (Ollama)', provider: 'ollama', inputCostPer1M: 0, outputCostPer1M: 0 },
   { id: 'mistral', label: 'Mistral (Ollama)', provider: 'ollama', inputCostPer1M: 0, outputCostPer1M: 0 },
 ]
@@ -22,6 +23,8 @@ export const DEPRECATED_MODEL_MAP: Record<string, string> = {
   'gemini-1.5-flash': 'gemini-3.6-flash',
   'gemini-1.5-pro': 'gemini-2.5-pro',
   'gemini-2.5-pro-preview-05-06': 'gemini-2.5-pro',
+  'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+  'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
 }
 
 export function migrateModelId(modelId: string): string {

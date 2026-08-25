@@ -53,7 +53,7 @@ describe('useCodeExporter', () => {
   it('exports Python Groq snippet', () => {
     const code = exportCode('python', {
       provider: 'groq',
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-120b',
       systemPrompt: 'Sys',
       userPrompt: 'Hi',
       apiKey: 'gsk_test',

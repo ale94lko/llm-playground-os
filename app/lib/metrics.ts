@@ -160,6 +160,20 @@ export function buildLatencyTimeline(history: ExecutionHistoryEntry[], limit = 2
   return points.reverse()
 }
 
+export function buildTimelineFromResponses(
+  responses: ModelResponse[],
+  date: string,
+): TimelinePoint[] {
+  return responses
+    .filter(r => r.status === 'done')
+    .map(r => ({
+      date,
+      modelId: r.modelId,
+      label: modelLabel(r.modelId),
+      latencyMs: r.metrics.latencyMs,
+    }))
+}
+
 export function timelineSeries(points: TimelinePoint[]): Map<string, { label: string, values: number[] }> {
   const series = new Map<string, { label: string, values: number[] }>()
 

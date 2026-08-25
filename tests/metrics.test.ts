@@ -3,6 +3,7 @@ import {
   aggregateFromHistory,
   aggregateFromResponses,
   buildLatencyTimeline,
+  buildTimelineFromResponses,
   toChartData,
 } from '../app/lib/metrics'
 import type { ExecutionHistoryEntry, ModelResponse } from '../app/types/llm'
@@ -73,5 +74,43 @@ describe('metrics', () => {
     const timeline = buildLatencyTimeline(history)
     expect(timeline).toHaveLength(1)
     expect(timeline[0].latencyMs).toBe(300)
+  })
+
+  it('builds timeline from latest responses', () => {
+    const timeline = buildTimelineFromResponses(
+      [
+        sampleResponse('openai/gpt-oss-120b', 3600, 0.0009),
+        sampleResponse('gemini-3.6-flash', 4000, 0.0005),
+      ],
+      '2026-08-26T00:00:00Z',
+    )
+    expect(timeline).toHaveLength(2)
+    expect(timeline.map(p => p.modelId)).toContain('openai/gpt-oss-120b')
+  })
+
+  it('includes models with a single historical run in timeline', () => {
+    const history: ExecutionHistoryEntry[] = [
+      {
+        id: '2',
+        systemPrompt: '',
+        userPrompt: 'test',
+        variables: {},
+        models: [],
+        responses: [sampleResponse('openai/gpt-oss-120b', 3600, 0.0009)],
+        createdAt: '2026-08-26T00:00:00Z',
+      },
+      {
+        id: '1',
+        systemPrompt: '',
+        userPrompt: 'test',
+        variables: {},
+        models: [],
+        responses: [sampleResponse('gemini-3.6-flash', 4000, 0.0005)],
+        createdAt: '2026-08-25T00:00:00Z',
+      },
+    ]
+    const timeline = buildLatencyTimeline(history)
+    expect(timeline.map(p => p.modelId)).toContain('openai/gpt-oss-120b')
+    expect(timeline.map(p => p.modelId)).toContain('gemini-3.6-flash')
   })
 })
