@@ -69,5 +69,19 @@ function displayValue(provider: ProviderId, isUrl?: boolean): string {
         </div>
       </div>
     </div>
+
+    <UiCard class="p-4">
+      <UiLabel class="mb-1.5 block">Stream proxy URL (optional)</UiLabel>
+      <UiInput
+        :model-value="providerStore.streamProxyUrl"
+        type="url"
+        placeholder="https://your-proxy.example.com/api/stream"
+        @update:model-value="providerStore.streamProxyUrl = $event"
+      />
+      <p class="text-xs text-muted-foreground mt-2">
+        Leave empty to call providers directly from the browser (GitHub Pages).
+        Use a proxy only if a provider blocks browser requests.
+      </p>
+    </UiCard>
   </div>
 </template>

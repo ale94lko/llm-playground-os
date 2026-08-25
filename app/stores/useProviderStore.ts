@@ -27,6 +27,7 @@ export const useProviderStore = defineStore('provider', {
     anthropicKey: '',
     geminiKey: '',
     groqKey: '',
+    streamProxyUrl: '',
   }),
 
   getters: {
@@ -180,7 +181,7 @@ export const useProviderStore = defineStore('provider', {
 
   persist: [
     {
-      pick: ['encryptedPayload', 'ollamaUrl', 'selectedModels'],
+      pick: ['encryptedPayload', 'ollamaUrl', 'selectedModels', 'streamProxyUrl'],
     },
     {
       key: 'provider-session',
