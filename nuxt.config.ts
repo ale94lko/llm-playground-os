@@ -5,7 +5,7 @@ const baseURL = process.env.NUXT_APP_BASE_URL || '/'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NUXT_DEVTOOLS !== '0' },
 
   // Local-first app: state lives in localStorage/sessionStorage
   ssr: false,

@@ -173,11 +173,20 @@ npm run test:watch   # Watch mode
 npm run screenshots  # Regenerate README screenshots (requires dev server)
 ```
 
-To refresh screenshots:
+To refresh screenshots (devtools badge hidden):
 
 ```bash
-npm run dev          # in one terminal
-npm run screenshots  # in another
+# Terminal 1 — disable Nuxt DevTools overlay
+NUXT_DEVTOOLS=0 npm run dev
+
+# Terminal 2
+npm run screenshots
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:NUXT_DEVTOOLS='0'; npm run dev
 ```
 
 ## Security
