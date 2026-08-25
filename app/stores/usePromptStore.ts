@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { detectVariables, interpolateVariables, syncVariableKeys } from '~/lib/variables'
 import type { ExecutionHistoryEntry, ModelResponse, PromptVariables, SavedPrompt } from '~/types/llm'
 
 function createId() {
@@ -18,9 +19,7 @@ export const usePromptStore = defineStore('prompt', {
 
   getters: {
     detectedVariables(state): string[] {
-      const text = `${state.systemPrompt}\n${state.userPrompt}`
-      const matches = text.match(/\{\{(\w+)\}\}/g) ?? []
-      return [...new Set(matches.map(m => m.slice(2, -2)))]
+      return detectVariables(state.systemPrompt, state.userPrompt)
     },
 
     interpolatedSystemPrompt(state): string {
@@ -38,11 +37,7 @@ export const usePromptStore = defineStore('prompt', {
     },
 
     syncVariablesFromPrompts() {
-      for (const name of this.detectedVariables) {
-        if (!(name in this.variables)) {
-          this.variables[name] = ''
-        }
-      }
+      this.variables = syncVariableKeys(this.detectedVariables, this.variables)
     },
 
     setResponses(responses: ModelResponse[]) {
@@ -125,7 +120,3 @@ export const usePromptStore = defineStore('prompt', {
 
   persist: true,
 })
-
-function interpolateVariables(text: string, variables: PromptVariables): string {
-  return text.replace(/\{\{(\w+)\}\}/g, (_, name: string) => variables[name] ?? `{{${name}}}`)
-}

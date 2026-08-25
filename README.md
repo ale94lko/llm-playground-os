@@ -14,7 +14,7 @@ Open-source **multi-LLM playground** for developers and AI enthusiasts. Design p
 - **Parallel execution** — Compare up to 4 models side-by-side in a responsive grid
 - **Variable engine** — Use `{{variable_name}}` syntax with auto-generated input fields
 - **Real-time metrics** — Latency, TTFT, token counts, and estimated cost per model
-- **Local-first API keys** — Stored in browser localStorage, never persisted server-side
+- **Local-first API keys** — Encrypted with AES-256-GCM + master password before localStorage
 - **Code exporter** — Generate snippets for JavaScript, Python, cURL, and PHP
 - **History & library** — Save prompts with versioning and browse past executions
 
@@ -31,10 +31,11 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Configure providers
 
-1. Go to **Settings** and add your API keys (or Ollama URL for local models)
-2. Select models in the **Playground**
-3. Write your prompt with optional `{{variables}}`
-4. Click **Run All**
+1. Go to **Settings** and create an encrypted vault with a master password
+2. Unlock the vault and add your API keys (or Ollama URL for local models)
+3. Select models in the **Playground**
+4. Write your prompt with optional `{{variables}}`
+5. Click **Run All**
 
 > **Ollama tip:** Install [Ollama](https://ollama.com) and run `ollama pull llama3.2` — no API key needed.
 
@@ -66,6 +67,18 @@ app/
 ├── stores/              # Provider & prompt state (persisted)
 └── server/api/          # Stream proxy endpoint
 ```
+
+## Development
+
+```bash
+npm run dev      # Start dev server
+npm run build    # Production build
+npm test         # Run unit tests
+```
+
+## Security
+
+API keys are encrypted client-side using **AES-256-GCM** with a key derived from your master password (PBKDF2, 100k iterations). Only the encrypted payload is persisted — plaintext keys exist in memory while the vault is unlocked.
 
 ## Contributing
 
