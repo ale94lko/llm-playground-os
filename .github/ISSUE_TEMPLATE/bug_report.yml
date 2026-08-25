@@ -1,35 +1,52 @@
 name: Bug Report
-description: Report a bug or unexpected behavior
+description: Report unexpected behavior, UI glitches, or broken functionality
 title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to report a bug!
+      value: |
+        Thanks for taking the time to report a bug!
 
-  - type: textarea
-    id: description
+        Before you begin, **please search [existing issues](https://github.com/ale94lko/llm-playground-os/issues)** (open and closed) to avoid duplicates.
+
+        > **Security:** Never paste API keys, master passwords, or encrypted vault payloads in this form.
+        ---
+
+  - type: checkboxes
+    id: conduct
     attributes:
-      label: Describe the bug
-      placeholder: A clear description of what went wrong.
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-playground-os/blob/main/.github/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where did the bug occur?
+      description: Streaming and CORS behavior differs between environments.
+      options:
+        - GitHub Pages (production demo)
+        - Local dev (`npm run dev`)
+        - Local build / preview (`npm run generate` + `npm run preview`)
+        - Custom stream proxy (Settings → Stream proxy URL)
     validations:
       required: true
 
-  - type: textarea
-    id: steps
+  - type: dropdown
+    id: area
     attributes:
-      label: Steps to reproduce
-      placeholder: |
-        1. Go to '...'
-        2. Click on '...'
-        3. See error
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
+      label: Affected area
+      options:
+        - Playground (prompts, variables, parallel runs)
+        - Metrics (charts, timeline, comparison table)
+        - History (past runs, reload)
+        - Settings (vault, API keys, providers)
+        - Navigation / layout / mobile menu
+        - Code exporter
+        - Other
     validations:
       required: true
 
@@ -38,15 +55,87 @@ body:
     attributes:
       label: Provider (if applicable)
       options:
+        - N/A — not provider-related
         - OpenAI
         - Anthropic
-        - Gemini
+        - Google Gemini
         - Groq
-        - Ollama
-        - N/A
+        - Ollama (local)
+        - Multiple providers
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model ID or name (if applicable)
+      placeholder: e.g. gpt-4o-mini, claude-sonnet-4-20250514, llama3.2
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you observed.
+      placeholder: e.g. Clicking Run All shows an error banner and no tokens stream in.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps so we can reproduce the issue locally.
+      placeholder: |
+        1. Go to Settings and unlock the vault
+        2. Add a Groq API key
+        3. Select GPT-OSS 120B in the Playground
+        4. Click Run All
+        5. See error: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console / network errors
+      description: Paste relevant messages from DevTools (Console or Network tab). Redact any tokens or keys.
+      placeholder: |
+        Console: Failed to fetch ...
+        Network: POST https://api.groq.com/... → 403
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & OS
+      placeholder: Chrome 131 / Windows 11
+    validations:
+      required: true
 
   - type: input
     id: version
     attributes:
-      label: Browser / OS
-      placeholder: "Chrome 120 / Windows 11"
+      label: App version or commit (optional)
+      description: From the live demo URL, a git commit SHA, or `package.json` version if running locally.
+      placeholder: main @ abc1234 or local uncommitted
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or extra context
+      description: Drag and drop images here. Links to related issues or PRs are welcome.
+    validations:
+      required: false

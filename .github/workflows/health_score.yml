@@ -1,0 +1,16 @@
+name: Repo Health Score Badge
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    name: Job to deploy badge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Repo Health Score Badge
+        uses: ale94lko/repo-health-score@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

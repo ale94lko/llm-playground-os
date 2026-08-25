@@ -1,17 +1,48 @@
 name: Feature Request
-description: Suggest a new feature or enhancement
+description: Suggest a new feature or improvement to an existing one
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
-      value: Have an idea? We'd love to hear it!
+      value: |
+        Have an idea to make LLM Playground OS better? We'd love to hear it!
+
+        Please **search [existing issues](https://github.com/ale94lko/llm-playground-os/issues)** first — someone may have already suggested it.
+        ---
+
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/ale94lko/llm-playground-os/blob/main/.github/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area would this improve?
+      options:
+        - Playground (prompts, variables, parallel runs)
+        - Metrics & analytics
+        - History & prompt library
+        - Settings & security vault
+        - Providers & models
+        - Code exporter
+        - UI / UX / accessibility
+        - Developer experience (tests, docs, CI)
+        - Other
+    validations:
+      required: true
 
   - type: textarea
     id: problem
     attributes:
       label: Problem / motivation
-      placeholder: Is your feature request related to a problem? Please describe.
+      description: What pain point or use case does this address?
+      placeholder: As a developer comparing models, I want to ... so that I can ...
     validations:
       required: true
 
@@ -19,7 +50,7 @@ body:
     id: solution
     attributes:
       label: Proposed solution
-      placeholder: Describe the solution you'd like.
+      description: Describe the feature or change you have in mind. Mockups or wireframes are welcome.
     validations:
       required: true
 
@@ -27,4 +58,33 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
-      placeholder: Any alternative solutions or features you've considered.
+      placeholder: Other approaches you thought about and why you prefer this one.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - Nice to have
+        - Would improve my workflow
+        - Blocking — I can't use the app effectively without it
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to submit a PR for this feature
+        - label: I can help test a prototype or review a PR
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Links, screenshots, or references to similar tools.
+    validations:
+      required: false

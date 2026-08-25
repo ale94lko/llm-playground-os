@@ -1,6 +1,7 @@
 # LLM Playground OS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Health Score](https://github.com/ale94lko/llm-playground-os/blob/output/badge.svg)](https://github.com/ale94lko/repo-health-score)
 [![Nuxt](https://img.shields.io/badge/Nuxt-4-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
 
@@ -191,12 +192,13 @@ Keys also live in sessionStorage for the current browser session. Locking the va
 
 ## Contributing
 
-Contributions are welcome! Please open an issue first to discuss what you'd like to change.
+Contributions are welcome! Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and open an issue first to discuss what you'd like to change.
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes
-4. Push and open a Pull Request
+3. Run tests (`npm test`)
+4. Commit your changes
+5. Push and open a Pull Request
 
 ## License
 

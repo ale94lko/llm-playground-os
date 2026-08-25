@@ -1,0 +1,122 @@
+name: Provider / Streaming Issue
+description: Report CORS errors, API failures, or streaming problems with a specific LLM provider
+title: "[Provider]: "
+labels: ["bug", "provider"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for **provider-specific** problems: CORS blocks, HTTP errors, missing tokens, wrong model responses, or Ollama connectivity.
+
+        For general UI bugs unrelated to a provider, use **Bug Report** instead.
+
+        > **Security:** Never paste API keys or vault secrets. Describe errors in plain text only.
+        ---
+
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Browser-direct calls on GitHub Pages are subject to provider CORS policies.
+        Local dev uses the Nitro proxy at `/api/stream` and usually avoids CORS issues.
+      options:
+        - GitHub Pages (production demo)
+        - Local dev (`npm run dev`)
+        - Custom stream proxy (Settings → Stream proxy URL)
+        - Ollama (local only)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - OpenAI
+        - Anthropic
+        - Google Gemini
+        - Groq
+        - Ollama
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model ID
+      placeholder: e.g. openai/gpt-oss-120b, gemini-3.6-flash
+    validations:
+      required: true
+
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: Symptom
+      options:
+        - CORS / network error in browser
+        - HTTP error (4xx / 5xx)
+        - Request succeeds but no tokens stream
+        - Stream stops mid-response
+        - Wrong or empty model output
+        - Metrics (latency, TTFT, cost) incorrect
+        - Ollama unreachable or model not found
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: Exact text from the UI banner, console, or Network tab response body (redact secrets).
+      placeholder: |
+        Network error: Some providers block browser requests...
+        or: 401 Unauthorized — invalid API key format
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Unlock vault in Settings
+        2. Select Groq → GPT-OSS 120B
+        3. Enter a simple user prompt
+        4. Click Run All
+    validations:
+      required: true
+
+  - type: textarea
+    id: proxy
+    attributes:
+      label: Stream proxy URL (if used)
+      description: Hostname only — do not include auth tokens.
+      placeholder: https://my-proxy.example.com/stream
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & OS
+      placeholder: Firefox 133 / macOS 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Workarounds tried
+      description: e.g. ran locally with `npm run dev`, changed model, set OLLAMA_ORIGINS, etc.
+    validations:
+      required: false
