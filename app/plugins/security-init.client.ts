@@ -1,3 +1,5 @@
 export default defineNuxtPlugin(() => {
-  useProviderStore().migrateLegacyStorage()
+  const provider = useProviderStore()
+  provider.migrateLegacyStorage()
+  provider.migrateDeprecatedModels()
 })
