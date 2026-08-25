@@ -37,6 +37,42 @@ describe('useCodeExporter', () => {
     expect(code).toContain('gpt-4o-mini')
   })
 
+  it('exports Python Gemini snippet', () => {
+    const code = exportCode('python', {
+      provider: 'gemini',
+      model: 'gemini-3.6-flash',
+      systemPrompt: 'You are helpful.',
+      userPrompt: 'Say hi',
+      apiKey: 'AIza-test',
+    })
+    expect(code).toContain('from google import genai')
+    expect(code).toContain('gemini-3.6-flash')
+    expect(code).not.toMatch(/^# Provider:/)
+  })
+
+  it('exports Python Groq snippet', () => {
+    const code = exportCode('python', {
+      provider: 'groq',
+      model: 'llama-3.3-70b-versatile',
+      systemPrompt: 'Sys',
+      userPrompt: 'Hi',
+      apiKey: 'gsk_test',
+    })
+    expect(code).toContain('base_url="https://api.groq.com/openai/v1"')
+  })
+
+  it('exports Python Ollama snippet', () => {
+    const code = exportCode('python', {
+      provider: 'ollama',
+      model: 'llama3.2',
+      systemPrompt: 'Sys',
+      userPrompt: 'Hi',
+      ollamaUrl: 'http://localhost:11434',
+    })
+    expect(code).toContain('import requests')
+    expect(code).toContain('localhost:11434')
+  })
+
   it('exports Ollama JavaScript without API key', () => {
     const code = exportCode('javascript', {
       provider: 'ollama',

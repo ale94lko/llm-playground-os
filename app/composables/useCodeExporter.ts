@@ -55,7 +55,7 @@ while (true) {
 }`
   }
 
-  const baseUrl = getBaseUrl(opts.provider)
+  const baseUrl = getBaseUrl(opts.provider, opts.model)
   const headers = getHeaders(opts)
 
   return `const response = await fetch('${baseUrl}', {
@@ -110,12 +110,80 @@ client = anthropic.Anthropic(api_key="${opts.apiKey ?? 'YOUR_API_KEY'}")
 
 with client.messages.stream(
     model="${opts.model}",
-    max_tokens=1024,
+    max_tokens=4096,
     system=${JSON.stringify(opts.systemPrompt)},
     messages=[{"role": "user", "content": ${JSON.stringify(opts.userPrompt)}}],
 ) as stream:
     for text in stream.text_stream:
         print(text, end="", flush=True)`
+  }
+
+  if (opts.provider === 'groq') {
+    return `from openai import OpenAI
+
+client = OpenAI(
+    api_key="${opts.apiKey ?? 'YOUR_API_KEY'}",
+    base_url="https://api.groq.com/openai/v1",
+)
+
+stream = client.chat.completions.create(
+    model="${opts.model}",
+    messages=[
+        {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
+        {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
+    ],
+    stream=True,
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)`
+  }
+
+  if (opts.provider === 'gemini') {
+    return `from google import genai
+
+client = genai.Client(api_key="${opts.apiKey ?? 'YOUR_API_KEY'}")
+
+stream = client.models.generate_content_stream(
+    model="${opts.model}",
+    contents=${JSON.stringify(opts.userPrompt)},
+    config=genai.types.GenerateContentConfig(
+        system_instruction=${JSON.stringify(opts.systemPrompt)},
+    ),
+)
+
+for chunk in stream:
+    if chunk.text:
+        print(chunk.text, end="", flush=True)`
+  }
+
+  if (opts.provider === 'ollama') {
+    const url = `${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat`
+    return `import json
+import requests
+
+response = requests.post(
+    "${url}",
+    json={
+        "model": "${opts.model}",
+        "messages": [
+            {"role": "system", "content": ${JSON.stringify(opts.systemPrompt)}},
+            {"role": "user", "content": ${JSON.stringify(opts.userPrompt)}},
+        ],
+        "stream": True,
+    },
+    stream=True,
+)
+response.raise_for_status()
+
+for line in response.iter_lines():
+    if not line:
+        continue
+    chunk = json.loads(line)
+    content = chunk.get("message", {}).get("content", "")
+    if content:
+        print(content, end="", flush=True)`
   }
 
   return `# Provider: ${opts.provider}
@@ -139,7 +207,18 @@ function exportCurl(opts: ExportOptions): string {
   })}'`
   }
 
-  const baseUrl = getBaseUrl(opts.provider)
+  if (opts.provider === 'gemini') {
+    const apiKey = opts.apiKey ?? 'YOUR_API_KEY'
+    const url = `${getBaseUrl('gemini', opts.model)}&key=${apiKey}`
+    return `curl "${url}" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: opts.userPrompt }] }],
+    systemInstruction: { parts: [{ text: opts.systemPrompt }] },
+  })}'`
+  }
+
+  const baseUrl = getBaseUrl(opts.provider, opts.model)
   const headers = getHeaders(opts)
   const headerFlags = Object.entries(headers)
     .map(([k, v]) => `-H "${k}: ${v}"`)
@@ -160,7 +239,7 @@ function exportCurl(opts: ExportOptions): string {
 function exportPhp(opts: ExportOptions): string {
   const url = opts.provider === 'ollama'
     ? `${opts.ollamaUrl ?? 'http://localhost:11434'}/api/chat`
-    : getBaseUrl(opts.provider)
+    : getBaseUrl(opts.provider, opts.model)
 
   const body = JSON.stringify({
     model: opts.model,
@@ -189,11 +268,11 @@ curl_exec($ch);
 curl_close($ch);`
 }
 
-function getBaseUrl(provider: ProviderId): string {
+function getBaseUrl(provider: ProviderId, model?: string): string {
   switch (provider) {
     case 'openai': return 'https://api.openai.com/v1/chat/completions'
     case 'anthropic': return 'https://api.anthropic.com/v1/messages'
-    case 'gemini': return 'https://generativelanguage.googleapis.com/v1beta/models/MODEL:streamGenerateContent'
+    case 'gemini': return `https://generativelanguage.googleapis.com/v1beta/models/${model ?? 'MODEL'}:streamGenerateContent?alt=sse`
     case 'groq': return 'https://api.groq.com/openai/v1/chat/completions'
     default: return ''
   }
