@@ -150,9 +150,7 @@ app/
 ├── stores/              # Provider & prompt state (persisted)
 └── server/api/          # Stream proxy (local dev / Node deployments)
 docs/
-└── screenshots/         # README screenshots (regenerate with npm run screenshots)
-scripts/
-└── capture-screenshots.mjs
+└── screenshots/         # README example images
 ```
 
 ## Development
@@ -163,23 +161,6 @@ npm run build        # Production build (Node server)
 npm run generate     # Static export for GitHub Pages
 npm test             # Run unit tests
 npm run test:watch   # Watch mode
-npm run screenshots  # Regenerate README screenshots (requires dev server)
-```
-
-To refresh screenshots (devtools badge hidden):
-
-```bash
-# Terminal 1 — disable Nuxt DevTools overlay
-NUXT_DEVTOOLS=0 npm run dev
-
-# Terminal 2
-npm run screenshots
-```
-
-On Windows PowerShell:
-
-```powershell
-$env:NUXT_DEVTOOLS='0'; npm run dev
 ```
 
 ## Security
