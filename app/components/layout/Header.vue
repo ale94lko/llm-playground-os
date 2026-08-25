@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Cpu, History, Settings } from '@lucide/vue'
+import { BarChart3, Cpu, History, Settings } from '@lucide/vue'
 
 const route = useRoute()
 
 const links = [
   { to: '/', label: 'Playground', icon: Cpu },
   { to: '/history', label: 'History', icon: History },
+  { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 </script>
