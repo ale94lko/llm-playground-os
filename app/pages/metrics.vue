@@ -32,10 +32,7 @@ const timelinePoints = computed(() => {
   if (view.value === 'latest') {
     const latest = promptStore.history[0]
     if (latest) return buildLatencyTimeline([latest])
-    return buildTimelineFromResponses(
-      promptStore.responses,
-      new Date().toISOString(),
-    )
+    return buildTimelineFromResponses(promptStore.responses, 'latest-run')
   }
   return buildLatencyTimeline(promptStore.history)
 })

@@ -2,6 +2,7 @@
 definePageMeta({ layout: 'default' })
 
 import { Bookmark, Clock, Trash2 } from '@lucide/vue'
+import { formatDateTime } from '~/lib/formatDate'
 
 const promptStore = usePromptStore()
 
@@ -48,7 +49,7 @@ const activeTab = ref<'history' | 'saved'>('history')
           <div class="min-w-0 flex-1">
             <p class="text-sm font-medium truncate">{{ entry.userPrompt }}</p>
             <p class="text-xs text-muted-foreground mt-1">
-              {{ new Date(entry.createdAt).toLocaleString() }} · {{ entry.models.length }} model(s)
+              {{ formatDateTime(entry.createdAt) }} · {{ entry.models.length }} model(s)
             </p>
           </div>
           <UiButton variant="outline" size="sm" @click.stop="navigateTo('/')">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { colorForIndex, type TimelinePoint } from '~/lib/metrics'
+import { formatDateTime } from '~/lib/formatDate'
 
 const props = defineProps<{
   points: TimelinePoint[]
@@ -54,9 +55,7 @@ function xScaleRun(runIndex: number, totalRuns: number): number {
 }
 
 function formatRunLabel(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return formatDateTime(iso)
 }
 
 function truncateLabel(label: string, max = 14): string {
