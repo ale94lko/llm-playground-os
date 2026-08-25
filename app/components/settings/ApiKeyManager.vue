@@ -15,9 +15,15 @@ const providers: { id: ProviderId; label: string; placeholder: string; isUrl?: b
 
 const visible = ref<Record<string, boolean>>({})
 
-const keysDisabled = computed(() =>
-  securityStore.hasMasterPassword && securityStore.isLocked,
-)
+const keysHidden = computed(() => securityStore.hideKeyValues)
+const keysReadonly = computed(() => securityStore.hideKeyValues)
+
+function displayValue(provider: ProviderId, isUrl?: boolean): string {
+  if (isUrl || !keysHidden.value) {
+    return providerStore.getApiKey(provider)
+  }
+  return providerStore.isProviderConfigured(provider) ? '••••••••••••••••' : ''
+}
 </script>
 
 <template>
@@ -30,14 +36,14 @@ const keysDisabled = computed(() =>
         <div>
           <p class="text-sm font-medium">Local-first storage</p>
           <p class="text-xs text-muted-foreground mt-1">
-            API keys never touch the server database. They are encrypted in your browser and sent only through the stream proxy to forward requests.
+            API keys work in the playground even when the vault is locked. Locking only hides key values in Settings.
           </p>
         </div>
       </div>
     </UiCard>
 
-    <div v-if="keysDisabled" class="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-      Unlock the vault above to view or edit API keys.
+    <div v-if="keysHidden" class="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+      Keys are hidden. Unlock the vault to view or edit them — the playground keeps working.
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
@@ -45,17 +51,16 @@ const keysDisabled = computed(() =>
         <UiLabel class="mb-1.5 block">{{ provider.label }}</UiLabel>
         <div class="relative">
           <UiInput
-            :model-value="providerStore.getApiKey(provider.id)"
-            :type="provider.isUrl || visible[provider.id] ? 'text' : 'password'"
+            :model-value="displayValue(provider.id, provider.isUrl)"
+            :type="provider.isUrl || (visible[provider.id] && !keysHidden) ? 'text' : 'password'"
             :placeholder="provider.placeholder"
-            :disabled="keysDisabled && !provider.isUrl"
+            :readonly="keysReadonly && !provider.isUrl"
             @update:model-value="providerStore.setApiKey(provider.id, $event)"
           />
           <button
-            v-if="!provider.isUrl"
+            v-if="!provider.isUrl && !keysHidden"
             type="button"
-            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-            :disabled="keysDisabled"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             @click="visible[provider.id] = !visible[provider.id]"
           >
             <EyeOff v-if="visible[provider.id]" class="h-4 w-4" />

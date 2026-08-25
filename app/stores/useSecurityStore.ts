@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import {
   deriveKey,
-  encryptJson,
   generateSalt,
   hashPassword,
   parseSalt,
   verifyPassword,
+  saveSessionCryptoKey,
+  loadSessionCryptoKey,
+  loadPersistedCryptoKey,
   type ApiKeysPayload,
 } from '~/lib/crypto'
 
@@ -13,6 +15,7 @@ export const useSecurityStore = defineStore('security', {
   state: () => ({
     salt: '',
     passwordVerifier: '',
+    /** Controls whether API key values are visible/editable in Settings UI */
     isUnlocked: false,
     _cryptoKey: null as CryptoKey | null,
   }),
@@ -23,6 +26,11 @@ export const useSecurityStore = defineStore('security', {
     },
 
     isLocked(state): boolean {
+      return !!state.passwordVerifier && !state.isUnlocked
+    },
+
+    /** Hide key values in Settings when vault exists and UI is locked */
+    hideKeyValues(state): boolean {
       return !!state.passwordVerifier && !state.isUnlocked
     },
   },
@@ -42,6 +50,7 @@ export const useSecurityStore = defineStore('security', {
       this._cryptoKey = key
       this.isUnlocked = true
 
+      await saveSessionCryptoKey(key)
       await useProviderStore().encryptAndPersistKeys()
     },
 
@@ -49,15 +58,20 @@ export const useSecurityStore = defineStore('security', {
       const valid = await verifyPassword(password, this.salt, this.passwordVerifier)
       if (!valid) return false
 
-      this._cryptoKey = await deriveKey(password, parseSalt(this.salt))
+      const key = await deriveKey(password, parseSalt(this.salt))
+      this._cryptoKey = key
       this.isUnlocked = true
-      await useProviderStore().decryptKeys(this._cryptoKey)
+      await saveSessionCryptoKey(key)
+
+      const provider = useProviderStore()
+      if (provider.encryptedPayload) {
+        await provider.decryptKeys(key)
+      }
       return true
     },
 
+    /** Hide keys in UI only — keys stay in memory and keep working */
     lock() {
-      useProviderStore().clearDecryptedKeys()
-      this._cryptoKey = null
       this.isUnlocked = false
     },
 
@@ -81,8 +95,31 @@ export const useSecurityStore = defineStore('security', {
       this._cryptoKey = key
       this.isUnlocked = true
 
+      await saveSessionCryptoKey(key)
       await useProviderStore().encryptAndPersistKeys()
       return true
+    },
+
+    /** Load keys into memory silently — playground works even when UI is locked */
+    async bootstrapKeys(): Promise<void> {
+      const provider = useProviderStore()
+      const hasAnyKey = !!(
+        provider.openaiKey
+        || provider.anthropicKey
+        || provider.geminiKey
+        || provider.groqKey
+      )
+
+      if (!this.hasMasterPassword) return
+
+      const cryptoKey = await loadSessionCryptoKey() ?? await loadPersistedCryptoKey()
+      if (!cryptoKey) return
+
+      this._cryptoKey = cryptoKey
+
+      if (!hasAnyKey && provider.encryptedPayload) {
+        await provider.decryptKeys(cryptoKey)
+      }
     },
   },
 

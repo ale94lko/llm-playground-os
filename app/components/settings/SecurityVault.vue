@@ -55,7 +55,7 @@ function handleLock() {
       <div>
         <p class="text-sm font-medium">Encrypted API key vault</p>
         <p class="text-xs text-muted-foreground mt-1">
-          API keys are encrypted with AES-256-GCM using a master password before being stored in localStorage.
+          Lock hides API keys from view in Settings. The playground keeps using them in the background.
         </p>
       </div>
     </div>
@@ -97,7 +97,7 @@ function handleLock() {
 
     <div v-else class="space-y-3">
       <UiBadge variant="success">Vault unlocked</UiBadge>
-      <p class="text-xs text-muted-foreground">Your API keys are decrypted in memory. Lock when you step away.</p>
+      <p class="text-xs text-muted-foreground">Key values are visible. Lock to hide them from view when sharing your screen.</p>
       <UiButton variant="outline" @click="handleLock">
         <Lock class="h-4 w-4" />
         Lock vault

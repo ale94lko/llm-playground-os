@@ -77,3 +77,49 @@ export async function verifyPassword(password: string, salt: string, verifier: s
   const hash = await hashPassword(password, salt)
   return hash === verifier
 }
+
+const SESSION_CRYPTO_KEY = 'llm-playground-session-key'
+const PERSISTED_CRYPTO_KEY = 'llm-playground-vault-key'
+
+export async function saveSessionCryptoKey(key: CryptoKey): Promise<void> {
+  const raw = await crypto.subtle.exportKey('raw', key)
+  const encoded = toBase64(new Uint8Array(raw))
+  if (import.meta.client) {
+    sessionStorage.setItem(SESSION_CRYPTO_KEY, encoded)
+    localStorage.setItem(PERSISTED_CRYPTO_KEY, encoded)
+  }
+}
+
+export async function loadSessionCryptoKey(): Promise<CryptoKey | null> {
+  if (!import.meta.client) return null
+  return importRawKey(sessionStorage.getItem(SESSION_CRYPTO_KEY))
+}
+
+export async function loadPersistedCryptoKey(): Promise<CryptoKey | null> {
+  if (!import.meta.client) return null
+  return importRawKey(localStorage.getItem(PERSISTED_CRYPTO_KEY))
+}
+
+async function importRawKey(encoded: string | null): Promise<CryptoKey | null> {
+  if (!encoded) return null
+  try {
+    const raw = fromBase64(encoded)
+    return crypto.subtle.importKey(
+      'raw',
+      raw,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt'],
+    )
+  }
+  catch {
+    return null
+  }
+}
+
+export function clearSessionCryptoKey(): void {
+  if (import.meta.client) {
+    sessionStorage.removeItem(SESSION_CRYPTO_KEY)
+    localStorage.removeItem(PERSISTED_CRYPTO_KEY)
+  }
+}

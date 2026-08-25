@@ -7,6 +7,7 @@ import {
   type EncryptedPayload,
 } from '~/lib/crypto'
 import { DEPRECATED_MODEL_MAP, migrateModelId, PROVIDER_MODELS } from '~/lib/providerModels'
+import { sessionStore } from '~/lib/sessionStore'
 
 export { DEPRECATED_MODEL_MAP, PROVIDER_MODELS }
 
@@ -52,6 +53,10 @@ export const useProviderStore = defineStore('provider', {
           default: return false
         }
       }
+    },
+
+    hasStoredEncryptedKeys(state): boolean {
+      return !!state.encryptedPayload
     },
 
     keysPayload(state): ApiKeysPayload {
@@ -105,7 +110,7 @@ export const useProviderStore = defineStore('provider', {
       if (field) (this as Record<string, string>)[field] = value
 
       const security = useSecurityStore()
-      if (security.isUnlocked) {
+      if (security.getCryptoKey()) {
         void this.encryptAndPersistKeys()
       }
     },
@@ -173,7 +178,14 @@ export const useProviderStore = defineStore('provider', {
     },
   },
 
-  persist: {
-    pick: ['encryptedPayload', 'ollamaUrl', 'selectedModels'],
-  },
+  persist: [
+    {
+      pick: ['encryptedPayload', 'ollamaUrl', 'selectedModels'],
+    },
+    {
+      key: 'provider-session',
+      pick: ['openaiKey', 'anthropicKey', 'geminiKey', 'groqKey'],
+      storage: sessionStore,
+    },
+  ],
 })
