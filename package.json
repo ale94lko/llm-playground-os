@@ -21,7 +21,8 @@
     "check:headers": "node scripts/check-license-headers.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test:offline": "vitest run --config vitest.offline.config.ts"
   },
   "dependencies": {
     "@lucide/vue": "^1.45.0",

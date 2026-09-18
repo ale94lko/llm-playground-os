@@ -58,6 +58,9 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage
 
+      - name: Test with network denied
+        run: npm run test:offline
+
   # Dedicated clean-runner gate: do NOT nest verify:fresh after quality/test npm ci.
   # The script itself runs npm ci → build → test:coverage and fails the job on error.
   fresh:
