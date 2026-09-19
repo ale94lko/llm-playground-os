@@ -3,11 +3,13 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadHandler, stubNitroGlobals } from './nitroTestUtils'
+import { installOfflineFetchGuard } from '../offlineFetch'
 
 describe('server/api/health.get', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.unstubAllGlobals()
+    installOfflineFetchGuard()
   })
 
   it('returns status, uptimeMs, and timestamp from runtime metrics', async () => {

@@ -43,6 +43,7 @@ npm run lint
 npm run typecheck
 npm run check:headers
 npm test
+npm run test:offline
 ```
 
 Coverage report:
@@ -51,14 +52,14 @@ Coverage report:
 npm run test:coverage
 ```
 
-CI runs lint, typecheck, tests with coverage, `npm audit --audit-level=high`, and **commitlint** on every pull request.
+CI runs lint, typecheck, tests with coverage, offline unit proof (`npm run test:offline`), `npm audit --audit-level=high`, and **commitlint** on every pull request.
 
 ### CI vs GitHub Pages deploy
 
-- **`CI`** (`.github/workflows/ci.yml`) is the quality gate on pull requests and pushes to `main`: `quality` (audit, lint, typecheck), a dedicated `test` job (`npm run test:coverage`), `fresh` (`npm run verify:fresh` on a clean runner), plus `docker-smoke` (Compose boot + `/api/health`).
+- **`CI`** (`.github/workflows/ci.yml`) is the quality gate on pull requests and pushes to `main`: `quality` (audit, lint, typecheck), a dedicated `test` job (`npm run test:coverage` + `npm run test:offline`), `fresh` (`npm run verify:fresh` on a clean runner), plus `docker-smoke` (Compose boot + `/api/health`).
 - **`Deploy to GitHub Pages`** (`.github/workflows/deploy-pages.yml`) does **not** re-run that gate on push to `main`. It starts via `workflow_run` after a successful **CI** run that was a **push to `main`**, checks out that exact commit, then only generates and publishes the static site.
 - Failed CI on `main` blocks deploy. Manual `workflow_dispatch` on the deploy workflow still runs the full quality steps before `npm run generate`, so a broken site cannot be published that way either.
-- Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage per test. Prefer not to rely on order-dependent global state.
+- Vitest uses `pool: 'threads'` with `isolate: false` to cut happy-dom startup cost; `tests/setup.ts` resets storage and the offline `fetch` guard per test. Prefer not to rely on order-dependent global state.
 - Coverage thresholds enforce lines/functions/statements (≥90%) and branches (≥80%) via `vitest.config.ts` (`perFile: false`). Unmet thresholds make `npm run test:coverage` exit non-zero, so the CI `test` / `fresh` jobs fail. Do not lower thresholds just to pass.
 
 ### Smoke E2E (static Pages output)
@@ -202,7 +203,7 @@ These CI jobs from [`.github/workflows/ci.yml`](.github/workflows/ci.yml) must b
 | Check | What it enforces |
 | :--- | :--- |
 | `quality` | `npm audit --audit-level=high`, lint, and typecheck |
-| `test` | `npm run test:coverage` (Vitest thresholds fail the job) |
+| `test` | `npm run test:coverage` + `npm run test:offline` (no live network / Ollama) |
 | `fresh` | Clean-runner `npm run verify:fresh` (`npm ci` → build → coverage); fails the workflow on error |
 | `docker-smoke` | Compose boot from `.env.example` → `.env`; fails if `/api/health` never becomes ready |
 | `commitlint` | Conventional Commits on PR commits (Dependabot PRs are exempt; see [Commit style](#commit-style-conventional-commits)) |

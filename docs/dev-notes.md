@@ -56,11 +56,26 @@ CI gates the same path on a dedicated `docker-smoke` job in `.github/workflows/c
 
 ### Offline unit tests (no Ollama / API keys)
 
-The default Vitest suite (`npm test`, `npm run test:coverage`) uses **happy-dom** and **mocked `fetch`**. Specs such as `tests/toolCall.test.ts`, `tests/localDiscovery.test.ts`, and provider/stream tests do **not** require:
+The default Vitest suite (`npm test`, `npm run test:coverage`, `npm run test:offline`) uses **happy-dom** and **mocked `fetch`**. Specs such as `tests/toolCall.test.ts`, `tests/localDiscovery.test.ts`, and provider/stream tests do **not** require:
 
 - a running Ollama or LM Studio process
 - real OpenAI / Anthropic / Gemini / Groq API keys
 - browser localStorage from a previous session (`tests/setup.ts` stubs storage)
+
+#### Stub inventory
+
+| Stub point | Where | Used by |
+| :--- | :--- | :--- |
+| `localStorage` / `sessionStorage` | `tests/setup.ts` | All Pinia-persisted stores |
+| Deny-all `fetch` guard | `tests/offlineFetch.ts` (installed from `setup.ts`) | Fails closed if a spec forgets to stub |
+| `useLLMStream` / `streamCompletion` | `vi.stubGlobal` in Compare / page specs | `useCompareRunner`, `pages/index` |
+| `streamCompletionDirect` / `ViaProxy` | `vi.spyOn(streamClient, …)` | `useLLMStream.test.ts` |
+| Global `fetch` for SSE / HTTP | `vi.stubGlobal('fetch', …)` | `streamClient`, `server/api/stream`, `useProviderStore`, ModelSelector |
+| Injected `fetchImpl` | Arg to `discoverOllamaModels` / `discoverLocalLlms` | `ollamaModels.test.ts`, `localDiscovery.test.ts` |
+| Provider URL builders only | Pure functions in `app/lib/streamProviders.ts` | `streamProviders.test.ts` (no network) |
+| Exporter snippets | String assertions on generated code | `exporters/*`, `codeExporter` (URLs appear in source text only) |
+
+CI proves the suite stays offline: the `test` job runs `npm run test:offline` after coverage, which on Linux wraps Vitest in `unshare --user --map-root-user --net` (no network namespace). Locally on Windows/macOS, `npm run test:offline` runs the same Vitest command and relies on the fetch guard + stubs above — full namespace denial is the Ubuntu CI check.
 
 Optional runtime features (Detect local LLMs, Compare against cloud providers, Playwright smoke against static Pages) need a browser and/or local servers; they are outside this fresh-clone gate.
 

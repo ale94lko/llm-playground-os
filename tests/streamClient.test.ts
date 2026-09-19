@@ -9,6 +9,7 @@ import {
   streamCompletionViaProxy,
 } from '../app/lib/streamClient'
 import type { StreamRequest } from '../app/types/llm'
+import { installOfflineFetchGuard } from './offlineFetch'
 
 function textStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
@@ -56,6 +57,7 @@ describe('streamClient', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    installOfflineFetchGuard()
   })
 
   it('resolves a custom proxy URL and the local Nitro endpoint in dev', () => {
