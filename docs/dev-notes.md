@@ -64,6 +64,21 @@ The default Vitest suite (`npm test`, `npm run test:coverage`) uses **happy-dom*
 
 Optional runtime features (Detect local LLMs, Compare against cloud providers, Playwright smoke against static Pages) need a browser and/or local servers; they are outside this fresh-clone gate.
 
+#### Stub points used by unit tests
+
+| Stub point | Mechanism | Used by |
+| --- | --- | --- |
+| `streamClient` module (`streamCompletionDirect` etc.) | `vi.spyOn(streamClient, …)` | `tests/useLLMStream.test.ts` |
+| `streamCompletion` / provider stream helpers | injected `fetchImpl` (`vi.fn()`) | `tests/streamClient.test.ts`, `tests/streamProviders.test.ts` |
+| `app/lib` provider helpers (Ollama/LM Studio discovery) | injected `fetchImpl` (`vi.fn()`) | `tests/ollamaModels.test.ts`, `tests/localDiscovery.test.ts` |
+| `useLLMStream` composable | `vi.stubGlobal('useLLMStream', …)` | `tests/pages/index.test.ts`, `tests/useCompareRunner.test.ts` |
+| global `fetch` | `vi.stubGlobal('fetch', …)` / `globalThis.fetch =` | API and store specs |
+| browser storage | `tests/setup.ts` stubs `localStorage` | all component/store specs |
+
+#### Offline proof (network denied, not just mocked)
+
+`npm run test:offline` runs the full suite under **actual network denial**: `vitest.offline.config.ts` adds `tests/offline.setup.ts`, which makes any non-loopback connection — `fetch`, `net.connect`, `tls.connect`, `dns.lookup` — throw immediately. This is the cross-platform equivalent of `unshare -n` and works identically on Windows, macOS, Linux, and CI. It is enforced as a CI step in the `test` job, right after `test:coverage`.
+
 Playwright smoke (`npm run test:e2e:smoke`) needs a prior `npm run generate` and Chromium; it is covered separately by `.github/workflows/smoke-e2e.yml` (non-blocking).
 
 ## API input validation
