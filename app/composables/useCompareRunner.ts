@@ -12,6 +12,7 @@ import { markInFlightAsCancelled, shouldPersistRunHistory } from '~/lib/runHisto
 import { evaluateAssertions, summarizeResponses } from '~/lib/assertions'
 import { buildToolFollowUpMessages, flattenMessagesForLegacyPrompt } from '~/lib/toolCall'
 import { PROVIDER_MODELS } from '~/lib/providerModels'
+import { buildMetrics, createInitialMetrics } from '~/lib/streamMetrics'
 import { interpolateVariables } from '~/lib/variables'
 import type { ModelResponse, PromptVariables } from '~/types/llm'
 
@@ -46,13 +47,7 @@ export function useCompareRunner() {
       modelId,
       content: '',
       status: 'idle',
-      metrics: {
-        latencyMs: 0,
-        ttftMs: null,
-        inputTokens,
-        outputTokens: 0,
-        costUsd: calculateCost(model, inputTokens, 0),
-      },
+      metrics: createInitialMetrics(inputTokens, calculateCost(model, inputTokens, 0)),
     }
   }
 
@@ -71,13 +66,10 @@ export function useCompareRunner() {
     let status: ModelResponse['status'] = 'streaming'
     let errorMessage: string | undefined
     const inputTokens = estimateTokens(prompts.systemPrompt + prompts.userPrompt)
-    const baseMetrics = {
-      latencyMs: 0,
-      ttftMs: null as number | null,
+    const baseMetrics = createInitialMetrics(
       inputTokens,
-      outputTokens: 0,
-      costUsd: calculateCost(PROVIDER_MODELS.find(m => m.id === slot.modelId), inputTokens, 0),
-    }
+      calculateCost(PROVIDER_MODELS.find(m => m.id === slot.modelId), inputTokens, 0),
+    )
 
     if (options?.updateStore !== false) {
       promptStore.updateResponse(slot.slotId, { status: 'streaming' })
@@ -100,12 +92,11 @@ export function useCompareRunner() {
           content += text
           const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
           const outputTokens = estimateTokens(content)
-          const metrics = {
-            ...baseMetrics,
+          const metrics = buildMetrics(baseMetrics, {
             outputTokens,
             costUsd: calculateCost(model, inputTokens, outputTokens),
             latencyMs: performance.now() - startTime,
-          }
+          })
           options?.onUpdate?.({ content, metrics })
           if (options?.updateStore !== false) {
             promptStore.updateResponse(slot.slotId, { content, metrics })
@@ -117,7 +108,7 @@ export function useCompareRunner() {
             const current = promptStore.responses.find(r => r.slotId === slot.slotId)
             if (!current) return
             promptStore.updateResponse(slot.slotId, {
-              metrics: { ...current.metrics, ttftMs },
+              metrics: buildMetrics(current.metrics, { ttftMs }),
             })
           }
         },
@@ -125,12 +116,11 @@ export function useCompareRunner() {
           status = 'done'
           const model = PROVIDER_MODELS.find(m => m.id === slot.modelId)
           const outputTokens = estimateTokens(content)
-          const metrics = {
-            ...baseMetrics,
+          const metrics = buildMetrics(baseMetrics, {
             outputTokens,
             costUsd: calculateCost(model, inputTokens, outputTokens),
             latencyMs: performance.now() - startTime,
-          }
+          })
           if (options?.updateStore !== false) {
             promptStore.updateResponse(slot.slotId, { status: 'done', metrics })
           }
@@ -138,10 +128,9 @@ export function useCompareRunner() {
         onError: (error) => {
           status = 'error'
           errorMessage = error.message
-          const metrics = {
-            ...baseMetrics,
+          const metrics = buildMetrics(baseMetrics, {
             latencyMs: performance.now() - startTime,
-          }
+          })
           if (options?.updateStore !== false) {
             promptStore.updateResponse(slot.slotId, {
               status: 'error',
@@ -156,11 +145,10 @@ export function useCompareRunner() {
 
     if (controller.signal.aborted && (status === 'streaming' || status === 'idle')) {
       status = 'cancelled'
-      const metrics = {
-        ...baseMetrics,
+      const metrics = buildMetrics(baseMetrics, {
         outputTokens: estimateTokens(content),
         latencyMs: performance.now() - startTime,
-      }
+      })
       if (options?.updateStore !== false) {
         promptStore.updateResponse(slot.slotId, {
           status: 'cancelled',

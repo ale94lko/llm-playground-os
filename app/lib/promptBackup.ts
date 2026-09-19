@@ -265,3 +265,120 @@ export function mergePromptBackup(
     savedPrompts,
   }
 }
+
+/** Serialize history + saved prompts to a JSON backup string. */
+export function exportPromptBackupJson(
+  history: ExecutionHistoryEntry[],
+  savedPrompts: SavedPrompt[],
+): string {
+  return serializePromptBackup(createPromptBackup(history, savedPrompts))
+}
+
+export interface ApplyPromptBackupResult {
+  history: ExecutionHistoryEntry[]
+  savedPrompts: SavedPrompt[]
+  imported: { history: number, savedPrompts: number }
+}
+
+/** Parse a backup and apply replace or merge against the current store slices. */
+export function applyPromptBackupImport(
+  current: { history: ExecutionHistoryEntry[], savedPrompts: SavedPrompt[] },
+  raw: string,
+  mode: PromptBackupMode,
+): ApplyPromptBackupResult {
+  const payload = parsePromptBackup(raw)
+  const imported = {
+    history: payload.history.length,
+    savedPrompts: payload.savedPrompts.length,
+  }
+
+  if (mode === 'replace') {
+    return {
+      history: payload.history.slice(0, 100),
+      savedPrompts: payload.savedPrompts,
+      imported,
+    }
+  }
+
+  const merged = mergePromptBackup(current, payload)
+  return {
+    history: merged.history,
+    savedPrompts: merged.savedPrompts,
+    imported,
+  }
+}
+
+export interface SavedPromptDraft {
+  systemPrompt: string
+  userPrompt: string
+  variables: PromptVariables
+  generation: GenerationParams
+}
+
+export interface UpsertSavedPromptResult {
+  savedPrompts: SavedPrompt[]
+  prompt: SavedPrompt
+}
+
+/** Create or version-bump a named saved prompt; returns the updated list + prompt. */
+export function upsertSavedPrompt(
+  savedPrompts: SavedPrompt[],
+  draft: SavedPromptDraft,
+  name: string,
+  tags: string[] = [],
+  meta: { model?: string, provider?: ProviderId } = {},
+  options: { now?: string, createId: () => string },
+): UpsertSavedPromptResult {
+  const now = options.now ?? new Date().toISOString()
+  const existing = savedPrompts.find(p => p.name === name)
+
+  if (existing) {
+    const prompt: SavedPrompt = {
+      ...existing,
+      revisions: [
+        ...(existing.revisions ?? []),
+        {
+          version: existing.version,
+          systemPrompt: existing.systemPrompt,
+          userPrompt: existing.userPrompt,
+          variables: { ...(existing.variables ?? {}) },
+          generation: existing.generation,
+          savedAt: existing.updatedAt,
+        },
+      ],
+      systemPrompt: draft.systemPrompt,
+      userPrompt: draft.userPrompt,
+      variables: { ...draft.variables },
+      generation: { ...draft.generation },
+      model: meta.model ?? existing.model,
+      provider: meta.provider ?? existing.provider,
+      tags,
+      version: existing.version + 1,
+      updatedAt: now,
+    }
+    return {
+      savedPrompts: savedPrompts.map(p => (p.id === existing.id ? prompt : p)),
+      prompt,
+    }
+  }
+
+  const prompt: SavedPrompt = {
+    id: options.createId(),
+    name,
+    systemPrompt: draft.systemPrompt,
+    userPrompt: draft.userPrompt,
+    tags,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+    variables: { ...draft.variables },
+    model: meta.model,
+    provider: meta.provider,
+    generation: { ...draft.generation },
+    revisions: [],
+  }
+  return {
+    savedPrompts: [prompt, ...savedPrompts],
+    prompt,
+  }
+}

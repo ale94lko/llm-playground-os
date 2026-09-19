@@ -3,10 +3,9 @@
 
 import { defineStore } from 'pinia'
 import {
-  createPromptBackup,
-  mergePromptBackup,
-  parsePromptBackup,
-  serializePromptBackup,
+  applyPromptBackupImport,
+  exportPromptBackupJson,
+  upsertSavedPrompt,
   type PromptBackupMode,
 } from '~/lib/promptBackup'
 import { parsePromptFile, serializePromptFile } from '~/lib/promptFile'
@@ -169,47 +168,20 @@ export const usePromptStore = defineStore('prompt', {
     },
 
     savePrompt(name: string, tags: string[] = [], meta: { model?: string; provider?: ProviderId } = {}) {
-      const existing = this.savedPrompts.find(p => p.name === name)
-      const now = new Date().toISOString()
-
-      if (existing) {
-        existing.revisions = existing.revisions ?? []
-        existing.revisions.push({
-          version: existing.version,
-          systemPrompt: existing.systemPrompt,
-          userPrompt: existing.userPrompt,
-          variables: { ...(existing.variables ?? {}) },
-          generation: existing.generation,
-          savedAt: existing.updatedAt,
-        })
-        existing.systemPrompt = this.systemPrompt
-        existing.userPrompt = this.userPrompt
-        existing.variables = { ...this.variables }
-        existing.generation = { ...this.generation }
-        existing.model = meta.model ?? existing.model
-        existing.provider = meta.provider ?? existing.provider
-        existing.tags = tags
-        existing.version += 1
-        existing.updatedAt = now
-        return existing
-      }
-
-      const prompt: SavedPrompt = {
-        id: createId(),
+      const { savedPrompts, prompt } = upsertSavedPrompt(
+        this.savedPrompts,
+        {
+          systemPrompt: this.systemPrompt,
+          userPrompt: this.userPrompt,
+          variables: this.variables,
+          generation: this.generation,
+        },
         name,
-        systemPrompt: this.systemPrompt,
-        userPrompt: this.userPrompt,
         tags,
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
-        variables: { ...this.variables },
-        model: meta.model,
-        provider: meta.provider,
-        generation: { ...this.generation },
-        revisions: [],
-      }
-      this.savedPrompts.unshift(prompt)
+        meta,
+        { createId },
+      )
+      this.savedPrompts = savedPrompts
       return prompt
     },
 
@@ -268,27 +240,18 @@ export const usePromptStore = defineStore('prompt', {
     },
 
     exportBackupJson(): string {
-      return serializePromptBackup(createPromptBackup(this.history, this.savedPrompts))
+      return exportPromptBackupJson(this.history, this.savedPrompts)
     },
 
     importBackupJson(raw: string, mode: PromptBackupMode): { history: number, savedPrompts: number } {
-      const payload = parsePromptBackup(raw)
-      if (mode === 'replace') {
-        this.history = payload.history.slice(0, 100)
-        this.savedPrompts = payload.savedPrompts
-      }
-      else {
-        const merged = mergePromptBackup(
-          { history: this.history, savedPrompts: this.savedPrompts },
-          payload,
-        )
-        this.history = merged.history
-        this.savedPrompts = merged.savedPrompts
-      }
-      return {
-        history: payload.history.length,
-        savedPrompts: payload.savedPrompts.length,
-      }
+      const result = applyPromptBackupImport(
+        { history: this.history, savedPrompts: this.savedPrompts },
+        raw,
+        mode,
+      )
+      this.history = result.history
+      this.savedPrompts = result.savedPrompts
+      return result.imported
     },
   },
 

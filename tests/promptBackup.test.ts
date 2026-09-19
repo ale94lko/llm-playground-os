@@ -4,10 +4,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   PROMPT_BACKUP_VERSION,
+  applyPromptBackupImport,
   createPromptBackup,
+  exportPromptBackupJson,
   mergePromptBackup,
   parsePromptBackup,
   serializePromptBackup,
+  upsertSavedPrompt,
 } from '../app/lib/promptBackup'
 import type { ExecutionHistoryEntry, SavedPrompt } from '../app/types/llm'
 
@@ -110,5 +113,56 @@ describe('promptBackup', () => {
     expect(merged.history.map(h => h.id).sort()).toEqual(['import-h', 'local-h'])
     expect(merged.savedPrompts).toHaveLength(1)
     expect(merged.savedPrompts[0]?.name).toBe('Updated')
+  })
+
+  it('exports and applies replace/merge via store-facing helpers', () => {
+    const json = exportPromptBackupJson([historyEntry('h1')], [savedPrompt('s1', 'Demo')])
+    expect(json).toContain('"version": 1')
+
+    const replaced = applyPromptBackupImport(
+      { history: [historyEntry('old')], savedPrompts: [savedPrompt('old-s', 'Old')] },
+      json,
+      'replace',
+    )
+    expect(replaced.history.map(h => h.id)).toEqual(['h1'])
+    expect(replaced.savedPrompts.map(p => p.name)).toEqual(['Demo'])
+    expect(replaced.imported).toEqual({ history: 1, savedPrompts: 1 })
+
+    const merged = applyPromptBackupImport(
+      { history: [historyEntry('keep')], savedPrompts: [savedPrompt('keep-s', 'Keep')] },
+      json,
+      'merge',
+    )
+    expect(merged.history.map(h => h.id).sort()).toEqual(['h1', 'keep'])
+    expect(merged.savedPrompts.map(p => p.name).sort()).toEqual(['Demo', 'Keep'])
+  })
+
+  it('upserts saved prompts with revisions on rename collision', () => {
+    const draft = {
+      systemPrompt: 'sys',
+      userPrompt: 'user',
+      variables: { topic: 'a' },
+      generation: { temperature: 0.5 },
+    }
+    const created = upsertSavedPrompt([], draft, 'Demo', ['tag'], { model: 'gpt-4o-mini', provider: 'openai' }, {
+      now: '2026-09-19T00:00:00.000Z',
+      createId: () => 'id-1',
+    })
+    expect(created.prompt.version).toBe(1)
+    expect(created.savedPrompts).toHaveLength(1)
+
+    const bumped = upsertSavedPrompt(
+      created.savedPrompts,
+      { ...draft, systemPrompt: 'sys-v2', userPrompt: 'user-v2' },
+      'Demo',
+      [],
+      {},
+      { now: '2026-09-19T01:00:00.000Z', createId: () => 'unused' },
+    )
+    expect(bumped.prompt.version).toBe(2)
+    expect(bumped.prompt.systemPrompt).toBe('sys-v2')
+    expect(bumped.prompt.revisions).toHaveLength(1)
+    expect(bumped.prompt.revisions[0]?.systemPrompt).toBe('sys')
+    expect(bumped.savedPrompts).toHaveLength(1)
   })
 })
