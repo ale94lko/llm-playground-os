@@ -3,6 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadHandler, stubNitroGlobals } from '../server/nitroTestUtils'
+import { installOfflineFetchGuard } from '../offlineFetch'
 
 /**
  * Malformed-body coverage for POST /api/stream.
@@ -16,11 +17,13 @@ describe('API stream validation boundary', () => {
     vi.resetModules()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    installOfflineFetchGuard()
     setHeader.mockReset()
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    installOfflineFetchGuard()
   })
 
   const cases: Array<{ name: string, body: unknown, message: RegExp }> = [

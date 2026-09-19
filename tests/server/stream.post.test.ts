@@ -8,6 +8,7 @@ import {
   stubNitroGlobals,
   textStream,
 } from './nitroTestUtils'
+import { installOfflineFetchGuard } from '../offlineFetch'
 
 const openaiBody = {
   provider: 'openai',
@@ -32,11 +33,13 @@ describe('server/api/stream.post', () => {
     vi.resetModules()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    installOfflineFetchGuard()
     setHeader.mockReset()
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    installOfflineFetchGuard()
   })
 
   async function metrics() {

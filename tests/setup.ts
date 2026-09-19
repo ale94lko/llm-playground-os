@@ -12,6 +12,7 @@ import { useModelSlotsStore } from '../app/stores/useModelSlotsStore'
 import { useProviderStore } from '../app/stores/useProviderStore'
 import { useSecurityStore } from '../app/stores/useSecurityStore'
 import { useVaultStore } from '../app/stores/useVaultStore'
+import { installOfflineFetchGuard } from './offlineFetch'
 
 vi.stubGlobal('computed', computed)
 vi.stubGlobal('ref', ref)
@@ -56,4 +57,5 @@ beforeEach(() => {
   sessionMemory.clear()
   vi.stubGlobal('localStorage', storageStub(memory))
   vi.stubGlobal('sessionStorage', storageStub(sessionMemory))
+  installOfflineFetchGuard()
 })

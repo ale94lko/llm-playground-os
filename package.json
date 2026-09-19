@@ -16,6 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:offline": "node scripts/test-offline.mjs",
     "test:e2e:smoke": "playwright test",
     "verify:fresh": "node scripts/verify-fresh-clone.mjs",
     "check:headers": "node scripts/check-license-headers.mjs",

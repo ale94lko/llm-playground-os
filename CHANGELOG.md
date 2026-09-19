@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Offline unit proof: stub inventory in `docs/dev-notes.md`, deny-all `fetch` guard, and `npm run test:offline` (Linux `unshare` network namespace in CI) ([#93](https://github.com/ale94lko/llm-workbench/issues/93))
 - OpenSSF Gold evidence: SPDX/copyright headers, two-person review, 2FA policy, small tasks, dated security review, reproducible-build notes, and coverage floors ≥90% statements / ≥80% branches
 - OpenSSF Silver project docs: governance, roadmap, architecture, assurance case, hardening, accessibility, achievements, and evidence map
 - English i18n catalog (`app/i18n/en.ts`) with skip-to-content and `html lang="en"`
